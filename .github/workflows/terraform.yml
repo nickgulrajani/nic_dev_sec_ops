@@ -19,22 +19,42 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: "1.5.0"
         
       - name: Terraform Format
+        id: fmt
         run: terraform fmt -check
         working-directory: ./terraform
 
       - name: Terraform Init
+        id: init
         run: terraform init
         working-directory: ./terraform
         
       - name: Terraform Plan
-        run: terraform plan
+        id: plan
+        run: terraform plan -var-file="environments/dev/terraform.tfvars"
         working-directory: ./terraform
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
         
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -auto-approve
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve -var-file="environments/dev/terraform.tfvars"
         working-directory: ./terraform
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
