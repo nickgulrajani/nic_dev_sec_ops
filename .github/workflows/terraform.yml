@@ -1,0 +1,40 @@
+name: "Terraform Deploy"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'terraform/**'
+  pull_request:
+    paths:
+      - 'terraform/**'
+
+jobs:
+  terraform:
+    name: "Terraform"
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        
+      - name: Terraform Format
+        run: terraform fmt -check
+        working-directory: ./terraform
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./terraform
+        
+      - name: Terraform Plan
+        run: terraform plan
+        working-directory: ./terraform
+        
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve
+        working-directory: ./terraform
