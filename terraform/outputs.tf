@@ -13,3 +13,4 @@ output "cosmos_db_endpoint" {
 output "app_url" {
   value = module.container_apps.app_url
 }
+

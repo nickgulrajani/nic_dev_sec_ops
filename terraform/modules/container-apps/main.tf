@@ -1,3 +1,4 @@
+# modules/container-apps/main.tf
 resource "azurerm_container_app_environment" "env" {
   name                       = var.environment_name
   location                   = var.location
@@ -8,8 +9,19 @@ resource "azurerm_container_app_environment" "env" {
 resource "azurerm_container_app" "app" {
   name                         = var.app_name
   container_app_environment_id = azurerm_container_app_environment.env.id
-  resource_group_name          = var.resource_group_name
-  revision_mode                = "Single"
+  resource_group_name         = var.resource_group_name
+  revision_mode               = "Single"
+
+  registry {
+    server               = var.acr_server
+    username            = var.acr_username
+    password_secret_name = "registry-password"
+  }
+
+  secret {
+    name  = "registry-password"
+    value = var.acr_password
+  }
 
   template {
     container {
@@ -45,7 +57,7 @@ resource "azurerm_container_app" "app" {
 
   ingress {
     external_enabled = true
-    target_port      = 3000
+    target_port     = 3000
     traffic_weight {
       percentage      = 100
       latest_revision = true
